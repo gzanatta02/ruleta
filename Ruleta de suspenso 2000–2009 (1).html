@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta de suspenso 2000–2009</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f1ece0;--ink:#13202f;--muted:#5b6571;--card:#fffaf0;--line:#13202f33;--amber:#c98400;--red:#a3202b;--teal:#1f6f78;--navy:#13202f;--paper:#f1ece0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1623;--ink:#ece6d8;--muted:#9aa5b1;--card:#142234;--line:#ece6d833;--amber:#f2a900;--red:#d1424d;--teal:#3a9aa5;--navy:#0d1623;--paper:#ece6d8}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.55;min-height:100vh}
+main{max-width:1000px;margin:0 auto;padding:28px 20px 48px;display:grid;gap:28px;grid-template-columns:1fr}
+h1{font-family:'Anton','Impact',sans-serif;font-weight:400;font-size:clamp(2.4rem,9vw,4.6rem);line-height:.95;margin:0;letter-spacing:.01em}
+.sub{margin:10px 0 0;color:var(--muted);max-width:44ch}
+.stage{display:flex;flex-direction:column;align-items:center;gap:20px}
+.wheelbox{position:relative;width:min(92vw,500px);aspect-ratio:1}
+canvas{width:100%;height:100%;display:block;border-radius:50%;box-shadow:0 0 0 6px var(--amber),0 0 0 9px var(--navy)}
+.pointer{position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-top:34px solid var(--red);filter:drop-shadow(0 2px 0 var(--navy));z-index:2}
+.hub{position:absolute;inset:50%;width:21%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:4px solid var(--amber);background:var(--navy);color:var(--paper);font-family:'Anton',sans-serif;font-size:clamp(.9rem,3.4vw,1.25rem);letter-spacing:.04em;cursor:pointer;z-index:3}
+.hub:disabled{cursor:progress;opacity:.85}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+.card{background:var(--card);border:1px solid var(--line);border-left:8px solid var(--red);padding:24px;min-height:300px}
+.card h2{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(1.8rem,6vw,2.6rem);line-height:1;margin:0 0 6px}
+.meta{color:var(--muted);font-style:italic;margin:0 0 14px}
+.card p{margin:0 0 16px;max-width:60ch}
+.twist{display:none;border-top:2px dashed var(--red);padding-top:14px}
+.twist.on{display:block}
+.twist b{color:var(--red)}
+.reveal{font:inherit;font-weight:600;background:transparent;color:var(--ink);border:2px solid var(--ink);padding:9px 16px;cursor:pointer}
+.reveal:hover{background:var(--ink);color:var(--bg)}
+.empty{color:var(--muted)}
+.warn{font-size:.9rem;color:var(--muted);margin-top:14px}
+@media(min-width:900px){main{grid-template-columns:1.05fr 1fr;align-items:center}header{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Ruleta de suspenso<br>2000–2009</h1>
+<p class="sub">Doce películas con finales que cambian todo lo que viste. Gira, mira la ficha y decide si querés leer el giro.</p>
+</header>
+
+<section class="stage">
+<div class="wheelbox">
+<div class="pointer"></div>
+<canvas id="w" width="1000" height="1000" aria-label="Ruleta con doce películas"></canvas>
+<button class="hub" id="spin">GIRAR</button>
+</div>
+</section>
+
+<section class="card" id="card" aria-live="polite">
+<p class="empty">Todavía no giraste. Tocá GIRAR en el centro de la ruleta y te toca una película.</p>
+</section>
+</main>
+
+<script>
+const MOVIES=[
+{t:"Memento",s:"Memento",y:2000,d:"Christopher Nolan",p:"EE. UU.",h:"Un hombre sin memoria reciente busca al asesino de su esposa guiándose por fotos y tatuajes.",x:"Leonard ya vengó a su esposa hace tiempo. Teddy se lo dice, pero Leonard decide olvidarlo a propósito y se arma una nueva “misión”, apuntando a Teddy como el próximo culpable. Sus propias notas son la trampa."},
+{t:"Los otros",s:"Los otros",y:2001,d:"Alejandro Amenábar",p:"España / EE. UU.",h:"Una madre protege a sus hijos, alérgicos a la luz, en una mansión aislada donde se oyen presencias.",x:"Grace y sus hijos están muertos. Ella los mató y se suicidó. Las “presencias” son la nueva familia viva que habita la casa, y los fantasmas son ellos."},
+{t:"Identidad",s:"Identidad",y:2003,d:"James Mangold",p:"EE. UU.",h:"Diez desconocidos quedan varados en un motel bajo la lluvia y alguien empieza a matarlos.",x:"Todo ocurre en la mente de Malcolm Rivers, un asesino con múltiples personalidades. Los huéspedes son esas personalidades, eliminadas en una audiencia psiquiátrica. La última, la más inocente, era la verdadera asesina."},
+{t:"Oldboy",s:"Oldboy",y:2003,d:"Park Chan-wook",p:"Corea del Sur",h:"Un hombre es secuestrado y encerrado 15 años sin saber por qué. Al salir tiene cinco días para averiguarlo.",x:"Woo-jin planeó todo como venganza y manipuló a Dae-su, vía hipnosis, para que se enamorara de Mi-do. Ella es su hija. Dae-su termina suplicando que le borren la verdad de la memoria."},
+{t:"El maquinista",s:"Maquinista",y:2004,d:"Brad Anderson",p:"España / EE. UU.",h:"Un obrero que no duerme hace un año empieza a ver señales de que alguien lo persigue.",x:"Ivan, el compañero misterioso, no existe. Trevor atropelló a un niño y huyó. Su cerebro inventó la paranoia para no enfrentar la culpa. Cuando se entrega, por fin puede dormir."},
+{t:"Saw",s:"Saw",y:2004,d:"James Wan",p:"EE. UU.",h:"Dos hombres despiertan encadenados en un baño inmundo, con un cadáver tendido en medio.",x:"El “cadáver” del centro es Jigsaw, John Kramer, que estuvo ahí todo el tiempo vigilándolos. Se levanta al final, cierra la puerta y los deja."},
+{t:"Ventana secreta",s:"V. secreta",y:2004,d:"David Koepp",p:"EE. UU.",h:"Un escritor es acosado por un desconocido que lo acusa de haberle robado un cuento.",x:"John Shooter no existe: es otra faceta de Mort Rainey, quien lo creó tras la ruptura con su esposa. Mort mata a quienes lo rodean y termina viviendo solo, con su obra y su culpa."},
+{t:"El prestigio",s:"El prestigio",y:2006,d:"Christopher Nolan",p:"Reino Unido / EE. UU.",h:"Dos magos rivales se obsesionan con superar el truco del otro, a cualquier costo.",x:"Borden eran en realidad dos hermanos gemelos que compartían una sola vida. Angier usaba una máquina que lo duplicaba y mataba a su doble ahogado en cada función. Ambos pagaron el prestigio con vidas."},
+{t:"Lucky Number Slevin",s:"Slevin",y:2006,d:"Paul McGuigan",p:"EE. UU.",h:"Un hombre confundido con otro queda atrapado entre dos mafiosos en guerra.",x:"Slevin es hijo de un hombre asesinado años atrás. Goodkat orquestó todo para que se vengara de los dos jefes, los responsables, usando la confusión de identidades como arma."},
+{t:"El orfanato",s:"El orfanato",y:2007,d:"Juan Antonio Bayona",p:"España / México",h:"Una mujer reabre el orfanato de su infancia y su hijo empieza a hablar con amigos invisibles.",x:"Simón murió asfixiado en el sótano, tras un accidente en el que Laura lo dejó encerrado sin querer. Ella lo descubre al final, toma pastillas y se une a los niños fantasma de la casa."},
+{t:"Río místico",s:"Río místico",y:2003,d:"Clint Eastwood",p:"EE. UU.",h:"Tres amigos de infancia marcados por un trauma se reencuentran cuando asesinan a la hija de uno de ellos.",x:"Jimmy mata a Dave creyéndolo culpable, pero Dave no había matado a Katie: había matado a un hombre aquella noche. Los verdaderos asesinos eran dos chicos del barrio. La verdad llega cuando ya es tarde."},
+{t:"Gone Baby Gone",s:"Gone Baby Gone",y:2007,d:"Ben Affleck",p:"EE. UU.",h:"Dos detectives buscan en un barrio humilde de Boston a una niña desaparecida.",x:"El capitán Doyle y su gente la secuestraron para “salvarla” de una madre negligente. Patrick elige denunciarlos, la niña vuelve, y entiende que hizo lo correcto con un costo enorme."}
+];
+const cols=['#13202f','#a3202b','#1f6f78','#f2a900'];
+const cv=document.getElementById('w'),cx=cv.getContext('2d'),N=MOVIES.length,S=2*Math.PI/N;
+let rot=0,busy=false,shown=-1;
+function draw(){
+ const R=500;cx.clearRect(0,0,1000,1000);cx.save();cx.translate(R,R);cx.rotate(rot);
+ for(let i=0;i<N;i++){
+  cx.beginPath();cx.moveTo(0,0);cx.arc(0,0,R,i*S,(i+1)*S);cx.closePath();
+  cx.fillStyle=cols[i%4];cx.fill();cx.strokeStyle='#f1ece0';cx.lineWidth=3;cx.stroke();
+  cx.save();cx.rotate((i+.5)*S);cx.textAlign='right';cx.textBaseline='middle';
+  cx.fillStyle=(i%4===3)?'#13202f':'#f1ece0';cx.font='56px Anton, Impact, sans-serif';
+  cx.fillText(MOVIES[i].s.toUpperCase(),R-36,0);cx.restore();
+ }
+ cx.restore();
+}
+function show(i){
+ const m=MOVIES[i],c=document.getElementById('card');
+ c.innerHTML='<h2></h2><p class="meta"></p><p class="hook"></p><button class="reveal" id="rv">Revelar el giro</button><div class="twist" id="tw"><p><b>Giro:</b> <span class="tx"></span></p></div><p class="warn">El giro tiene spoilers. Vela solo si ya la viste o no te importa.</p>';
+ c.querySelector('h2').textContent=m.t;
+ c.querySelector('.meta').textContent=m.y+' · '+m.d+' · '+m.p;
+ c.querySelector('.hook').textContent=m.h;
+ c.querySelector('.tx').textContent=m.x;
+ const b=c.querySelector('#rv'),t=c.querySelector('#tw');
+ b.onclick=()=>{const on=t.classList.toggle('on');b.textContent=on?'Ocultar el giro':'Revelar el giro'};
+}
+function spin(){
+ if(busy)return;busy=true;
+ const btn=document.getElementById('spin');btn.disabled=true;
+ let k;do{k=Math.floor(Math.random()*N)}while(k===shown&&N>1);
+ let end=-Math.PI/2-(k+.5+(Math.random()-.5)*.6)*S;
+ end+=2*Math.PI*Math.ceil((rot+12*Math.PI-end)/(2*Math.PI));
+ const start=rot,dur=matchMedia('(prefers-reduced-motion:reduce)').matches?700:5200,t0=performance.now();
+ (function f(now){
+  const p=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-p,4);
+  rot=start+(end-start)*e;draw();
+  if(p<1)requestAnimationFrame(f);
+  else{shown=k;show(k);busy=false;btn.disabled=false;btn.textContent='OTRA VEZ'}
+ })(t0);
+}
+document.getElementById('spin').addEventListener('click',spin);
+draw();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+</script>
+</body>
+</html>
